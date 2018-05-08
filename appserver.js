@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 	});
 
 
-
+//Post server command//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -58,7 +58,109 @@ querystring = querystring  + req.body.question + "','" + req.body.answera + "','
 
 });
 
-	
+
+
+
+//Get server command////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//get name 2 as limit
+	app.get('/postgistest', function (req,res) {
+		console.log('postgistest');
+		pool.connect(function(err,client,done) {
+		if(err){
+				   console.log("not able to get connection "+ err);
+				   res.status(400).send(err);
+			   } 
+				client.query('SELECT name FROM united_kingdom_counties As lg limit 2' ,function(err,result) {
+				console.log("query");
+				   done(); 
+				   if(err){
+					   console.log(err);
+					   res.status(400).send(err);
+				   }
+				   res.status(200).send(result.rows);
+			   });
+			});
+	});
+
+//Get a question(at top) from questiontable in DB
+	app.get('/getquestion', function (req,res) {
+		console.log('getquestion');
+		pool.connect(function(err,client,done) {
+		if(err){
+				   console.log("not able to get connection "+ err);
+				   res.status(400).send(err);
+			   } 
+				client.query('SELECT question FROM questiontable' ,function(err,result) {
+				console.log("query");
+				   done(); 
+				   if(err){
+					   console.log(err);
+					   res.status(400).send(err);
+				   }
+				   res.status(200).send(result.rows);
+			   });
+			});
+	});
+
+
+
+/////////////////////////////////////////////////////////////
+//Get name from formdata (example)
+app.get('/getappresult', function (req,res) {
+		console.log('postgistest');
+		pool.connect(function(err,client,done) {
+		if(err){
+				   console.log("not able to get connection "+ err);
+				   res.status(400).send(err);
+			   } 
+				client.query('SELECT module FROM formdata' ,function(err,result) {
+				console.log("query");
+				   done(); 
+				   if(err){
+					   console.log(err);
+					   res.status(400).send(err);
+				   }
+				   res.status(200).send(result.rows);
+			   });
+			});
+	});
+
+
+
+
+//Delete server command////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////delete all question (testing)
+	 app.post('/deleteall', function (req,res) {
+		  pool.connect(function(err,client,done) {
+		         if(err){
+		             console.log("not able to get connection "+ err);
+		             res.status(400).send(err);
+		  }
+		         client.query('delete FROM questiontable'
+		  ,function(err,result) {
+		             done();
+		             if(err){
+		                 console.log(err);
+		                 res.status(400).send(err);
+		             }
+		             res.status(200).send("ok");
+		         });
+		  }); });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//Backup////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// adding functionality to log the requests
 	app.use(function (req, res, next) {
 		var filename = path.basename(req.url);
@@ -180,6 +282,9 @@ app.get('/getGeoJSON/:tablename/:geomcolumn', function (req,res) {
 
 
 
+
+
+
 	app.get('/postgistest', function (req,res) {
 		console.log('postgistest');
 		pool.connect(function(err,client,done) {
@@ -198,6 +303,10 @@ app.get('/getGeoJSON/:tablename/:geomcolumn', function (req,res) {
 			   });
 			});
 	});
+
+
+
+
 
 	// the / indicates the path that you type into the server - in this case, what happens when you type in:  http://developer.cege.ucl.ac.uk:32560/xxxxx/xxxxx
   app.get('/:name1', function (req, res) {
