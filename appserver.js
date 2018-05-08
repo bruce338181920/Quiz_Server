@@ -90,7 +90,7 @@ querystring = querystring  + req.body.question + "','" + req.body.answera + "','
 				   console.log("not able to get connection "+ err);
 				   res.status(400).send(err);
 			   } 
-				client.query('SELECT question FROM questiontable' ,function(err,result) {
+				client.query('SELECT question FROM questiontable As lg limit 1' ,function(err,result) {
 				console.log("query");
 				   done(); 
 				   if(err){
