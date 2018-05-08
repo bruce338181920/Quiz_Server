@@ -41,10 +41,10 @@ app.post('/uploadData',function(req,res){
 // pull the geometry component together
 // note that well known text requires the points as longitude/latitude !
 // well known text should look like: 'POINT(-71.064544 42.28787)'
-//var geometrystring = "st_geomfromtext('POINT(" + req.body.longitude + " " + req.body.latitude +")'";
+var geometrystring = "st_geomfromtext('POINT(" + req.body.longitude + " " + req.body.latitude +")'";
 
-var querystring = "INSERT into questiontable (question,answera,answerb,answerc,answerd,answerbox,longitude,latitude) values ('";
-querystring = querystring  + req.body.question + "','" + req.body.answera + "','" + req.body.answerb +"','" + req.body.answerc +"','" + req.body.answerd +"','" + req.body.Answerbox +"','" + req.body.longitude +"','" + req.body.latitude +"')" ;
+var querystring = "INSERT into questiontable (question,answera,answerb,answerc,answerd,answerbox,longitude,latitude,geom) values ('";
+querystring = querystring  + req.body.question + "','" + req.body.answera + "','" + req.body.answerb +"','" + req.body.answerc +"','" + req.body.answerd +"','" + req.body.Answerbox +"','" + req.body.longitude +"','" + req.body.latitude +"'," + geometrystring +"))" ;
        	console.log(querystring);
        	client.query( querystring,function(err,result) {
           done(); 
