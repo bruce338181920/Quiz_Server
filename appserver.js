@@ -23,7 +23,8 @@ app.use(bodyParser.json());
 
 
 
-//Adapt the POST command on httpServer.js so that your code connects to the database and inserts a record into the appresult table
+//This command upload the question, coordinates and related information to the database
+//SOURCE: Tutorial
 app.post('/uploadData',function(req,res){
 	// note that we are using POST here as we are uploading data
 	// so the parameters form part of the BODY of the request rather than the RESTful API
@@ -34,10 +35,6 @@ app.post('/uploadData',function(req,res){
           	console.log("not able to get connection "+ err);
            	res.status(400).send(err);
        	} 
-		
-		
-		
-		
 // pull the geometry component together
 // note that well known text requires the points as longitude/latitude !
 // well known text should look like: 'POINT(-71.064544 42.28787)'
@@ -61,8 +58,16 @@ querystring = querystring  + req.body.question + "','" + req.body.answera + "','
 
 
 
-//Get server command////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//get name 2 as limit
+//Commands of Obtain data from database ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+//get name 2 only from table:united_kingdom_counties (Example, it is not usefull for the assignment)
 	app.get('/postgistest', function (req,res) {
 		console.log('postgistest');
 		pool.connect(function(err,client,done) {
@@ -83,6 +88,7 @@ querystring = querystring  + req.body.question + "','" + req.body.answera + "','
 	});
 
 //Get a question(at top) from questiontable in DB
+//SOURCE: https://www.w3schools.com
 	app.get('/getquestion', function (req,res) {
 		console.log('getquestion');
 		pool.connect(function(err,client,done) {
@@ -124,6 +130,60 @@ app.get('/getappresult', function (req,res) {
 			   });
 			});
 	});
+//Obtain geom data
+app.get('/getGeoJSON/:tablename/:geomcolumn', function (req,res) {
+     pool.connect(function(err,client,done) {
+      	if(err){
+          	console.log("not able to get connection "+ err);
+           	res.status(400).send(err);
+       	} 
+
+       	var colnames = "";
+
+       	// first get a list of the columns that are in the table 
+       	// use string_agg to generate a comma separated list that can then be pasted into the next query
+       	var querystring = "select string_agg(colname,',') from ( select column_name as colname ";
+       	querystring = querystring + " FROM information_schema.columns as colname ";
+       	querystring = querystring + " where table_name   = '"+ req.params.tablename +"'";
+       	querystring = querystring + " and column_name <>'"+req.params.geomcolumn+"') as cols ";
+
+        	console.log(querystring);
+        	
+        	// now run the query
+        	client.query(querystring,function(err,result){
+          //call `done()` to release the client back to the pool
+          	done(); 
+	          if(err){
+               	console.log(err);
+               		res.status(400).send(err);
+          	}
+           	colnames = result.rows;
+       	});
+        	console.log("colnames are " + colnames);
+
+        	// now use the inbuilt geoJSON functionality
+        	// and create the required geoJSON format using a query adapted from here:  
+        	// http://www.postgresonline.com/journal/archives/267-Creating-GeoJSON-Feature-Collections-with-JSON-and-PostGIS-functions.html, accessed 4th January 2018
+        	// note that query needs to be a single string with no line breaks so built it up bit by bit
+
+        	var querystring = " SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features  FROM ";
+        	querystring = querystring + "(SELECT 'Feature' As type     , ST_AsGeoJSON(lg." + req.params.geomcolumn+")::json As geometry, ";
+        	querystring = querystring + "row_to_json((SELECT l FROM (SELECT "+colnames + ") As l      )) As properties";
+        	querystring = querystring + "   FROM "+req.params.tablename+"  As lg limit 100  ) As f ";
+        	console.log(querystring);
+
+        	// run the second query
+        	client.query(querystring,function(err,result){
+	          //call `done()` to release the client back to the pool
+          	done(); 
+           	if(err){	
+                          	console.log(err);
+               		res.status(400).send(err);
+          	 }
+           	res.status(200).send(result.rows);
+       	});
+    });
+});
 
 
 
@@ -225,60 +285,6 @@ app.get('/getPOI', function (req,res) {
     });
 });
 
-
-app.get('/getGeoJSON/:tablename/:geomcolumn', function (req,res) {
-     pool.connect(function(err,client,done) {
-      	if(err){
-          	console.log("not able to get connection "+ err);
-           	res.status(400).send(err);
-       	} 
-
-       	var colnames = "";
-
-       	// first get a list of the columns that are in the table 
-       	// use string_agg to generate a comma separated list that can then be pasted into the next query
-       	var querystring = "select string_agg(colname,',') from ( select column_name as colname ";
-       	querystring = querystring + " FROM information_schema.columns as colname ";
-       	querystring = querystring + " where table_name   = '"+ req.params.tablename +"'";
-       	querystring = querystring + " and column_name <>'"+req.params.geomcolumn+"') as cols ";
-
-        	console.log(querystring);
-        	
-        	// now run the query
-        	client.query(querystring,function(err,result){
-          //call `done()` to release the client back to the pool
-          	done(); 
-	          if(err){
-               	console.log(err);
-               		res.status(400).send(err);
-          	}
-           	colnames = result.rows;
-       	});
-        	console.log("colnames are " + colnames);
-
-        	// now use the inbuilt geoJSON functionality
-        	// and create the required geoJSON format using a query adapted from here:  
-        	// http://www.postgresonline.com/journal/archives/267-Creating-GeoJSON-Feature-Collections-with-JSON-and-PostGIS-functions.html, accessed 4th January 2018
-        	// note that query needs to be a single string with no line breaks so built it up bit by bit
-
-        	var querystring = " SELECT 'FeatureCollection' As type, array_to_json(array_agg(f)) As features  FROM ";
-        	querystring = querystring + "(SELECT 'Feature' As type     , ST_AsGeoJSON(lg." + req.params.geomcolumn+")::json As geometry, ";
-        	querystring = querystring + "row_to_json((SELECT l FROM (SELECT "+colnames + ") As l      )) As properties";
-        	querystring = querystring + "   FROM "+req.params.tablename+"  As lg limit 100  ) As f ";
-        	console.log(querystring);
-
-        	// run the second query
-        	client.query(querystring,function(err,result){
-	          //call `done()` to release the client back to the pool
-          	done(); 
-           	if(err){	
-                          	console.log(err);
-               		res.status(400).send(err);
-          	 }
-           	res.status(200).send(result.rows);
-       	});
-    });
-});
 
 
 
