@@ -40,8 +40,8 @@ app.post('/uploadData',function(req,res){
 // well known text should look like: 'POINT(-71.064544 42.28787)'
 var geometrystring = "st_geomfromtext('POINT(" + req.body.longitude + " " + req.body.latitude +")'";
 
-var querystring = "INSERT into questiontable (question,answera,answerb,answerc,answerd,answerbox,longitude,latitude,geom) values ('";
-querystring = querystring  + req.body.question + "','" + req.body.answera + "','" + req.body.answerb +"','" + req.body.answerc +"','" + req.body.answerd +"','" + req.body.Answerbox +"','" + req.body.longitude +"','" + req.body.latitude +"'," + geometrystring +"))" ;
+var querystring = "INSERT into questiontableid (question,answera,answerb,answerc,answerd,answerbox,longitude,latitude,geom) values ('";
+querystring = querystring + req.body.question + "','" + req.body.answera + "','" + req.body.answerb +"','" + req.body.answerc +"','" + req.body.answerd +"','" + req.body.Answerbox +"','" + req.body.longitude +"','" + req.body.latitude +"'," + geometrystring +"))" ;
        	console.log(querystring);
        	client.query( querystring,function(err,result) {
           done(); 
@@ -58,7 +58,7 @@ querystring = querystring  + req.body.question + "','" + req.body.answera + "','
 
 
 
-//Commands of Obtain data from database ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Commands of obtaining data from database ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -96,7 +96,7 @@ querystring = querystring  + req.body.question + "','" + req.body.answera + "','
 				   console.log("not able to get connection "+ err);
 				   res.status(400).send(err);
 			   } 
-				client.query('SELECT question FROM questiontable As lg limit 1' ,function(err,result) {
+				client.query('SELECT question FROM questiontableid As lg limit 1' ,function(err,result) {
 				console.log("query");
 				   done(); 
 				   if(err){
@@ -108,18 +108,16 @@ querystring = querystring  + req.body.question + "','" + req.body.answera + "','
 			});
 	});
 
-
-
-/////////////////////////////////////////////////////////////
-//Get name from formdata (example)
-app.get('/getappresult', function (req,res) {
-		console.log('postgistest');
+//Get a question(at the bottom, lastest) from questiontable in DB
+//SOURCE: https://www.w3schools.com
+	app.get('/getbotq', function (req,res) {
+		console.log('getquestion');
 		pool.connect(function(err,client,done) {
 		if(err){
 				   console.log("not able to get connection "+ err);
 				   res.status(400).send(err);
 			   } 
-				client.query('SELECT module FROM formdata' ,function(err,result) {
+				client.query('SELECT question FROM questiontableid WHERE question_id=(SELECT max(question_id) from questiontableid)' ,function(err,result) {
 				console.log("query");
 				   done(); 
 				   if(err){
@@ -130,6 +128,92 @@ app.get('/getappresult', function (req,res) {
 			   });
 			});
 	});
+
+//Get answera of latest question from questiontable in DB
+//SOURCE: https://www.w3schools.com
+	app.get('/lanswera', function (req,res) {
+		console.log('getquestion');
+		pool.connect(function(err,client,done) {
+		if(err){
+				   console.log("not able to get connection "+ err);
+				   res.status(400).send(err);
+			   } 
+				client.query('SELECT answera FROM questiontableid WHERE question_id=(SELECT max(question_id) from questiontableid)' ,function(err,result) {
+				console.log("query");
+				   done(); 
+				   if(err){
+					   console.log(err);
+					   res.status(400).send(err);
+				   }
+				   res.status(200).send(result.rows);
+			   });
+			});
+	});
+
+//Get answerb of latest question from questiontable in DB
+//SOURCE: https://www.w3schools.com
+	app.get('/lanswerb', function (req,res) {
+		console.log('getquestion');
+		pool.connect(function(err,client,done) {
+		if(err){
+				   console.log("not able to get connection "+ err);
+				   res.status(400).send(err);
+			   } 
+				client.query('SELECT answerb FROM questiontableid WHERE question_id=(SELECT max(question_id) from questiontableid)' ,function(err,result) {
+				console.log("query");
+				   done(); 
+				   if(err){
+					   console.log(err);
+					   res.status(400).send(err);
+				   }
+				   res.status(200).send(result.rows);
+			   });
+			});
+	});
+
+//Get answerc of latest question from questiontable in DB
+//SOURCE: https://www.w3schools.com
+	app.get('/lanswerc', function (req,res) {
+		console.log('getquestion');
+		pool.connect(function(err,client,done) {
+		if(err){
+				   console.log("not able to get connection "+ err);
+				   res.status(400).send(err);
+			   } 
+				client.query('SELECT answerc FROM questiontableid WHERE question_id=(SELECT max(question_id) from questiontableid)' ,function(err,result) {
+				console.log("query");
+				   done(); 
+				   if(err){
+					   console.log(err);
+					   res.status(400).send(err);
+				   }
+				   res.status(200).send(result.rows);
+			   });
+			});
+	});
+
+//Get answerd of latest question from questiontable in DB
+//SOURCE: https://www.w3schools.com
+	app.get('/lanswerd', function (req,res) {
+		console.log('getquestion');
+		pool.connect(function(err,client,done) {
+		if(err){
+				   console.log("not able to get connection "+ err);
+				   res.status(400).send(err);
+			   } 
+				client.query('SELECT answerd FROM questiontableid WHERE question_id=(SELECT max(question_id) from questiontableid)' ,function(err,result) {
+				console.log("query");
+				   done(); 
+				   if(err){
+					   console.log(err);
+					   res.status(400).send(err);
+				   }
+				   res.status(200).send(result.rows);
+			   });
+			});
+	});
+
+
 //Obtain geom data
 app.get('/getGeoJSON/:tablename/:geomcolumn', function (req,res) {
      pool.connect(function(err,client,done) {
